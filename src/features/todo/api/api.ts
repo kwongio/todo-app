@@ -10,6 +10,21 @@ export const fetchTodos = async (): Promise<Todo[]> => {
     return response.json();
 };
 
+export const updateTodo = async (todo: Todo): Promise<void> => {
+    const updatedTodo = {...todo, completed: !todo.completed}; // `completed` 상태 토글
+    const response = await fetch(`${API_URL}/${todo.id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedTodo),
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to update todo');
+    }
+};
+
 export const deleteTodo = async (id: number): Promise<void> => {
     const response = await fetch(`${API_URL}/${id}`, {
         method: 'DELETE',

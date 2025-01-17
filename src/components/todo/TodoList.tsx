@@ -1,27 +1,38 @@
 'use client';
 
-import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
-import {fetchTodos, deleteTodo} from '@/features/todo/api/api';
-import {Trash} from 'lucide-react';
-import {Todo} from '@/features/todo/types/type';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchTodos, deleteTodo, updateTodo } from '@/features/todo/api/api';
+import { Trash } from 'lucide-react';
+import { Todo } from '@/features/todo/types/type';
 
 export default function TodoList() {
     const queryClient = useQueryClient();
 
-    const {data: todos = [], isLoading, error} = useQuery<Todo[], Error>({
+    const { data: todos = [], isLoading, error } = useQuery<Todo[], Error>({
         queryKey: ['todos'],
         queryFn: fetchTodos,
     });
 
-    const mutation = useMutation<void, Error, number>({
+    const deleteMutation = useMutation<void, Error, number>({
         mutationFn: deleteTodo,
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['todos']});
+            queryClient.invalidateQueries({ queryKey: ['todos'] });
         },
     });
 
-    if (isLoading) return <p>Loading...</p>;
-    if (error) return <p>Error: {error.message}</p>;
+    const updateMutation = useMutation<void, Error, Todo>({
+        mutationFn: updateTodo,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['todos'] });
+        },
+    });
+
+    if (isLoading) {
+        return <div>Loading...</div>;
+    }
+    if (error) {
+        return <div>Error: {error.message}</div>;
+    }
 
     return (
         <ul className="space-y-4">
@@ -30,18 +41,21 @@ export default function TodoList() {
                     key={todo.id}
                     className="flex justify-between items-center p-4 border rounded-md shadow-sm"
                 >
+                    {/* 상태 토글 */}
                     <span
-                        className={`flex-1 ${
+                        onClick={() => updateMutation.mutate(todo)}
+                        className={`flex-1 cursor-pointer ${
                             todo.completed ? 'line-through text-gray-400' : 'text-gray-800'
                         }`}
                     >
                         {todo.title}
                     </span>
+                    {/* 삭제 버튼 */}
                     <button
-                        onClick={() => mutation.mutate(todo.id)}
+                        onClick={() => deleteMutation.mutate(todo.id)}
                         className="text-red-500 hover:text-red-700"
                     >
-                        <Trash/>
+                        <Trash />
                     </button>
                 </li>
             ))}
